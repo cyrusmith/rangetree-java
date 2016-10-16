@@ -1,7 +1,6 @@
 package ru.interosite.datastructures.rangetree;
 
 import com.google.common.base.Preconditions;
-import sun.reflect.generics.tree.Tree;
 
 import java.util.*;
 
@@ -114,12 +113,16 @@ public class RangeTree1D {
 
         int common = 0;
         // Looking for common node.
-        while (pathStart.get(common) == pathEnd.get(common)) {
+        while (common < pathStart.size() && pathStart.get(common) == pathEnd.get(common)) {
             common++;
         }
         common--;
 
         List<Integer> result = new ArrayList<>();
+        if (pathStart.size() == pathEnd.size() && common == pathEnd.size() - 1) {
+            result.add(pathEnd.get(common).rank);
+            return result;
+        }
 
         TreeNode prev = pathStart.remove(pathStart.size() - 1);
         if (prev.rank >= start) {
@@ -145,6 +148,7 @@ public class RangeTree1D {
 
         prev = pathEnd.remove(pathEnd.size() - 1);
         Integer lastElement = prev.rank <= end ? prev.rank : null;
+        Stack<Integer> rightStack = new Stack<>();
         while (pathEnd.size() - common - 1 > 0) {
             next = pathEnd.remove(pathEnd.size() - 1);
             if (next.right == prev) {
@@ -153,14 +157,17 @@ public class RangeTree1D {
                 while (!rangeQueue.isEmpty()) {
                     TreeNode node = rangeQueue.poll();
                     if (node.isLeaf()) {
-                        result.add(node.rank);
+                        rightStack.push(node.rank);
                     } else {
-                        rangeQueue.add(node.left);
                         rangeQueue.add(node.right);
+                        rangeQueue.add(node.left);
                     }
                 }
             }
             prev = next;
+        }
+        while (!rightStack.empty()) {
+            result.add(rightStack.pop());
         }
         if (lastElement != null) {
             result.add(lastElement);
